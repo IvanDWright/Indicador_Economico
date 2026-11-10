@@ -115,9 +115,44 @@ Nunca se pide `mutex` antes de `vacios` o `llenos`; así ningún hilo se queda d
 
 ---
 
-## 4. Compilación
+## 4. Requisitos para Compilar y Ejecutar
 
-Desde una terminal de Linux (o WSL en Windows), en la raíz del proyecto:
+Como el proyecto utiliza llamadas al sistema propias de **UNIX / POSIX** (`mkfifo` para pipes nominales, `alarm`, señales `SIGALRM` y `SIGPIPE`, hilos `pthread` y semáforos `sem_t`), **no se ejecuta directamente en CMD o PowerShell de Windows**, sino que requiere un entorno **Linux**.
+
+Herramientas necesarias dentro del entorno Linux:
+- **`gcc`:** Compilador de C con soporte para el estándar ANSI C89 (`-std=c89`) y librería `-pthread`.
+- **`make`:** Para compilar los tres programas automáticamente usando el `Makefile`.
+- **`bash` y `awk`:** Para correr los scripts de prueba de la carpeta `tests/`.
+
+Si estás trabajando en **Windows o macOS**, puedes correr todo el proyecto de dos maneras:
+
+### Opción A: Usando Docker (Recomendado en Windows)
+
+1. Instala y abre **Docker Desktop**.
+2. En una primera terminal (PowerShell o CMD) ubicada en la carpeta del proyecto (`d:\Indicador_Economico`), levanta un contenedor con `gcc` y `make` compartiendo los archivos de tu carpeta:
+   ```powershell
+   docker run -it --rm --name ise_contenedor -v "${PWD}:/proyecto" -w /proyecto gcc:latest bash
+   ```
+3. Para abrir **terminales adicionales** conectadas exactamente al mismo contenedor (para lanzar cada `agentePais` mientras `servidorISE` espera en la primera terminal), abre otra ventana de PowerShell y ejecuta:
+   ```powershell
+   docker exec -it ise_contenedor bash
+   ```
+4. **Nota importante sobre el pipe nominal en Docker:** cuando compartes una carpeta de Windows (`-v`) con un contenedor Linux, el sistema de archivos de Windows no permite crear archivos especiales FIFO (`mkfifo`) dentro de la carpeta montada. Por eso, al correr en Docker, pásale al parámetro `-p` una ruta dentro de `/tmp` (por ejemplo `-p /tmp/ise_fifo`), ya que `/tmp` vive en el sistema de archivos nativo de Linux del contenedor.
+
+### Opción B: Usando WSL2 (Ubuntu en Windows) o Linux Nativo
+
+1. Abre tu terminal de Ubuntu / WSL2 e instala las herramientas de compilación si aún no las tienes:
+   ```bash
+   sudo apt update && sudo apt install -y build-essential
+   ```
+2. Entra a la carpeta del proyecto (por ejemplo `cd /mnt/d/Indicador_Economico`).
+3. Nota: igual que en Docker, si estás dentro de `/mnt/d/...` (disco de Windows montado en WSL), usa `-p /tmp/ise_fifo` para que el pipe nominal se cree en el sistema de archivos nativo de Linux.
+
+---
+
+## 5. Compilación
+
+Dentro de la terminal de Linux (en Docker, WSL o Linux nativo), en la raíz del proyecto:
 
 ```bash
 make clean && make
@@ -130,7 +165,7 @@ Esto compila todos los módulos sin advertencias y genera los tres ejecutables:
 
 ---
 
-## 5. Instrucciones de Ejecución
+## 6. Instrucciones de Ejecución
 
 Las banderas de los tres programas se pueden pasar **en cualquier orden** gracias al uso de `getopt`.
 
@@ -141,31 +176,33 @@ Las banderas de los tres programas se pueden pasar **en cualquier orden** gracia
 ./generadorCSV -p IT -c 2000
 ```
 
-### Paso 2: Iniciar el servidor en una primera terminal
+### Paso 2: Iniciar el servidor en la Terminal 1
 ```bash
-./servidorISE -b 100 -p ise_fifo -a 3
+./servidorISE -b 100 -p /tmp/ise_fifo -a 3
 ```
 - `-b`: tamaño del buffer circular de cada agente (en cantidad de registros).
-- `-p`: nombre del pipe nominal que creará el servidor.
+- `-p`: nombre/ruta del pipe nominal que creará el servidor.
 - `-a`: cantidad de agentes habilitados (entre 1 y 4).
 
 ### Paso 3: Ejecutar cada agente en una terminal distinta
+Si usas Docker, abre cada terminal nueva con `docker exec -it ise_contenedor bash`:
+
 En la **Terminal 2**:
 ```bash
-./agentePais -n encuestas_ES.csv -p ise_fifo
+./agentePais -n encuestas_ES.csv -p /tmp/ise_fifo
 ```
 En la **Terminal 3**:
 ```bash
-./agentePais -n encuestas_FR.csv -p ise_fifo
+./agentePais -n encuestas_FR.csv -p /tmp/ise_fifo
 ```
 En la **Terminal 4**:
 ```bash
-./agentePais -n encuestas_IT.csv -p ise_fifo
+./agentePais -n encuestas_IT.csv -p /tmp/ise_fifo
 ```
 
 ---
 
-## 6. Pruebas Automáticas
+## 7. Pruebas Automáticas
 
 Para verificar la generación de un archivo CSV y todas sus restricciones:
 ```bash

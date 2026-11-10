@@ -22,3 +22,21 @@ Todas las funciones en `src/` están documentadas arriba de su definición con u
 3. **`Variables creadas:`** Lista de todas las variables locales declaradas al inicio de la función y para qué se usa cada una.
 4. **`Paso a paso:`** Explicación numerada en orden cronológico (`1. Primero...`, `2. Despues...`) de todas las validaciones y operaciones que ejecuta la función.
 5. **`Retorna:`** Qué devuelve la función cuando termina con éxito o cuando ocurre un error.
+
+## Requisitos para correr el proyecto (Docker / WSL / Linux)
+
+Para compilar y ejecutar el sistema completo se necesita un entorno **Linux / POSIX** con `gcc` y `make`, ya que se utilizan llamadas al sistema POSIX (`mkfifo`, `alarm`, `SIGALRM`, `SIGPIPE`, `pthread` y `sem_t`):
+
+- **Con Docker en Windows/macOS:**
+  1. Iniciar contenedor principal con `gcc` y `make`:
+     ```powershell
+     docker run -it --rm --name ise_contenedor -v "${PWD}:/proyecto" -w /proyecto gcc:latest bash
+     ```
+  2. Abrir terminales adicionales en el mismo contenedor para cada `agentePais`:
+     ```powershell
+     docker exec -it ise_contenedor bash
+     ```
+  3. Crear el pipe nominal en `/tmp/ise_fifo` (`-p /tmp/ise_fifo`) para que `mkfifo` opere sobre el sistema de archivos nativo de Linux del contenedor.
+- **Con WSL2 (Ubuntu) o Linux nativo:**
+  1. Instalar `build-essential` (`sudo apt update && sudo apt install -y build-essential`).
+  2. Compilar con `make clean && make` y probar con `bash tests/prueba_ise.sh`.
