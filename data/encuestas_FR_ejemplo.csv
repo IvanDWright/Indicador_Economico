@@ -1,0 +1,6 @@
+ID_Encuesta,ID_Pais,Pais,Sector,ID_Sector,Sentimiento
+1,1,FR,Industria,0,40.25
+2,1,FR,Servicios,1,60.70
+3,1,FR,Consumidores,2,58.44
+4,1,FR,Comercio,3,52.13
+5,1,FR,Construccion,4,30.12

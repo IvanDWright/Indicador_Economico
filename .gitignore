@@ -1,0 +1,26 @@
+# Objetos y ejecutables
+*.o
+build/
+servidorISE
+agentePais
+generadorCSV
+
+# Pipes nominales (FIFOs) y temporales
+*.fifo
+ise_fifo
+
+# CSV generados (los de data/ pequeños de prueba se agregan con git add -f)
+encuestas_*.csv
+!data/encuestas_*.csv
+
+# Entregables y editores
+*.zip
+*.tar
+*.tar.gz
+.vscode/
+.idea/
+*.swp
+*.d
+
+# Notas locales para asistentes de IA (no van al repo ni a la entrega)
+CLAUDE.md
